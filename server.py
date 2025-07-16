@@ -1,14 +1,17 @@
-from flask import Flask, request, send_file
-from rembg import remove
-from io import BytesIO
+from rembg import remove, new_session
+from rembg.session_factory import new_session
 
-app = Flask(__name__)
+# ✨  sessione rembg con alpha‑matting
+session = new_session(
+    name="u2net",
+    alpha_matting=True,
+    alpha_matting_foreground_threshold=240,
+    alpha_matting_background_threshold=10,
+    alpha_matting_erode_size=2,
+)
 
 @app.route('/', methods=['POST'])
 def strip():
     img_bytes = request.files['image'].read()
-    out_png   = remove(img_bytes)
-    return send_file(BytesIO(out_png), mimetype='image/png')
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    out = remove(img_bytes, session=session)
+    return send_file(BytesIO(out), mimetype='image/png')
